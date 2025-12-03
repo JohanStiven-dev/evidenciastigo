@@ -13,6 +13,9 @@ const transporter = nodemailer.createTransport({
     user: EMAIL_USER,
     pass: EMAIL_PASSWORD,
   },
+  tls: {
+    ciphers: 'SSLv3',
+  },
 });
 
 const templateCache = {};

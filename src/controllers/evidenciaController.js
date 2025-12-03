@@ -179,19 +179,17 @@ const createEvidencia = async (req, res) => {
     console.log('Evidencia created:', evidencia.id);
 
     // Notify Client
-    // Notify Client
+    // Notification removed: Only notify on Activity Status Change
+    /*
     try {
       const actividad = pItem.Presupuesto.Actividad;
-      const cliente = actividad.Proyecto?.Cliente;
-      if (cliente) {
-        await notifyEvidenceUploaded(actividad, cliente, pItem, evidencia.tipo);
-      } else {
-        console.log('WARNING: No client found to notify.');
-      }
+      // Notify Commercial and Client (Broadcast to roles)
+      await notifyEvidenceUploaded(actividad, pItem, evidencia.tipo);
     } catch (notifyError) {
       console.error('WARNING: Failed to send notification:', notifyError);
       // Do not fail the request if notification fails
     }
+    */
 
     console.log('--- CREATE EVIDENCIA SUCCESS ---');
     return successResponse(res, 'Evidence created successfully', evidencia, 201);
@@ -314,7 +312,8 @@ const updateEvidenciaStatus = async (req, res) => {
     const actividad = evidencia.PresupuestoItem.Presupuesto.Actividad;
     await Bitacora.create({ actividad_id: actividad.id, user_id: req.user.id, accion: 'Validación de Evidencia', desde_estado: `Evidencia ID ${evidencia.id}: ${oldStatus}`, hacia_estado: `Evidencia ID ${evidencia.id}: ${status}`, motivo: status === 'rechazado' ? motivoRechazo : 'Evidencia aprobada', ip_address: req.ip });
     if (status === 'rechazado') {
-      await notifyEvidenceRejected(actividad, evidencia, motivoRechazo, actividad.Productor);
+      // Notification removed: Only notify on Activity Status Change
+      // await notifyEvidenceRejected(actividad, evidencia, motivoRechazo);
     } else if (status === 'aprobado') {
       // Check if ALL evidences for this activity are approved
       const allEvidences = await Evidencia.findAll({
@@ -349,7 +348,7 @@ const updateEvidenciaStatus = async (req, res) => {
           ip_address: req.ip
         });
 
-        await notifyActivityFinalized(actividad, actividad.Comercial, actividad.Productor, actividad.Proyecto?.Cliente);
+        await notifyActivityFinalized(actividad);
       }
     }
     successResponse(res, 'Evidence status updated successfully', evidencia);

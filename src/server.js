@@ -25,7 +25,7 @@ const startServer = async () => {
     require('./models/CatalogoModel');
     require('./models/RefreshTokenModel'); // Ensure RefreshTokenModel is also imported
 
-    await sequelize.sync({ alter: true }); // Change back to force: false after initial setup
+    await sequelize.sync({ alter: false }); // Change back to force: false after initial setup
     console.log('All models were synchronized successfully.');
 
     // Re-enable foreign key checks

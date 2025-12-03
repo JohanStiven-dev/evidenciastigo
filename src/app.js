@@ -1,4 +1,6 @@
 const express = require('express');
+const helmet = require('helmet');
+const compression = require('compression');
 const cors = require('cors');
 const errorHandler = require('./middleware/errorHandler');
 const { AppError } = require('./utils/appError');
@@ -10,6 +12,8 @@ const { v4: uuidv4 } = require('uuid'); // Import uuid
 const app = express();
 
 // Middleware
+app.use(helmet()); // Security headers
+app.use(compression()); // Gzip compression
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -43,11 +47,14 @@ apiRouter.use('/evidencias', require('./routes/evidenciaRoutes'));
 apiRouter.use('/calendario', require('./routes/calendarioRoutes'));
 apiRouter.use('/notificaciones', require('./routes/notificacionRoutes'));
 apiRouter.use('/dashboard', require('./routes/dashboardRoutes'));
-apiRouter.use('/reportes', require('./routes/reportesRoutes'));
+const reportesRoutes = require('./routes/reportesRoutes');
+const userRoutes = require('./routes/userRoutes'); // Import user routes
 apiRouter.use('/catalogo', require('./routes/catalogoRoutes'));
 apiRouter.use('/bitacoras', require('./routes/bitacoraRoutes'));
 
 app.use('/api/v2', apiRouter);
+app.use('/api/v2/reportes', reportesRoutes);
+app.use('/api/v2/users', userRoutes); // Mount user routes
 
 // Swagger UI
 app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
