@@ -8,6 +8,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/intl.dart'; // Importar para DateFormat
 import 'package:tigo/utils/api_exception.dart'; // Import for ApiException
 
+
 class FormView extends StatefulWidget {
   final Actividad? actividadToEdit; // Actividad opcional para edición
 
@@ -25,7 +26,9 @@ class _FormViewState extends State<FormView> {
   String? _selectedSegmento;
   String? _selectedClasePpto;
   String? _selectedCanal;
+
   String? _selectedCiudad;
+
 
   final TextEditingController _codigosController = TextEditingController();
   final TextEditingController _responsableActController = TextEditingController();
@@ -45,7 +48,9 @@ class _FormViewState extends State<FormView> {
   List<Catalogo> _segmentos = [];
   List<Catalogo> _clasePptos = [];
   List<Catalogo> _canales = [];
+
   List<Catalogo> _ciudades = [];
+
 
   bool _isLoadingCatalogs = true;
   bool _isSubmitting = false;
@@ -81,13 +86,27 @@ class _FormViewState extends State<FormView> {
     try {
       // Normalize spaces (replace non-breaking spaces \u00A0 and \u202F with standard space)
       time12h = time12h.replaceAll(RegExp(r'[\u00A0\u202F]'), ' ').trim();
-      final format12 = DateFormat.jm(); // "5:00 PM"
+      
+      // Force en_US locale to ensure it expects standard spaces and AM/PM format
+      final format12 = DateFormat('h:mm a', 'en_US'); 
       final date = format12.parse(time12h);
       final format24 = DateFormat('HH:mm'); // "17:00"
       return format24.format(date);
     } catch (e) {
       debugPrint('Error converting time: $e');
-      return time12h; // Return original if parsing fails (fallback)
+      // Fallback: try to parse without AM/PM if it's already 24h or simple format
+      try {
+         if (time12h.contains(':')) {
+           final parts = time12h.split(':');
+           int hour = int.parse(parts[0].trim());
+           int minute = int.parse(parts[1].split(' ')[0].trim()); // handle potential trailing AM/PM
+           // Basic adjustment if PM is detected manually and parsing failed
+           if (time12h.toUpperCase().contains('PM') && hour < 12) hour += 12;
+           if (time12h.toUpperCase().contains('AM') && hour == 12) hour = 0;
+           return '${hour.toString().padLeft(2, '0')}:${minute.toString().padLeft(2, '0')}';
+         }
+      } catch (_) {}
+      return time12h; 
     }
   }
 
@@ -135,10 +154,10 @@ class _FormViewState extends State<FormView> {
       if (!mounted) return;
 
       setState(() {
-        _segmentos = responses[0];
-        _clasePptos = responses[1];
-        _canales = responses[2];
-        _ciudades = responses[3];
+        _segmentos = (responses[0] as List).cast<Catalogo>();
+        _clasePptos = (responses[1] as List).cast<Catalogo>();
+        _canales = (responses[2] as List).cast<Catalogo>();
+        _ciudades = (responses[3] as List).cast<Catalogo>();
 
         // If editing, ensure the activity's current values exist in the dropdown lists
         if (widget.actividadToEdit != null) {
@@ -240,6 +259,7 @@ class _FormViewState extends State<FormView> {
       final actividadToSave = Actividad(
         id: widget.actividadToEdit?.id ?? 0, // Usar ID existente si es edición, sino 0
         comercialId: userId,
+        productorId: null, // No specific producer assigned at creation
         agencia: _selectedAgencia!,
         codigos: _codigosController.text,
         semana: _calculatedWeek, // Usar la semana calculada dinámicamente
@@ -395,23 +415,23 @@ class _FormViewState extends State<FormView> {
                     _buildFormRow(
                       context,
                       children: [
-                        _buildDropdownField(
+                        _buildDropdownField<String>(
                           'Segmento *',
-                          _segmentos.map((c) => c.valor).toList(),
+                          _segmentos.map((c) => DropdownMenuItem(value: c.valor, child: Text(c.valor, style: GoogleFonts.inter(fontSize: 14)))).toList(),
                           _selectedSegmento,
                           (value) => setState(() => _selectedSegmento = value),
                           initialValue: _selectedSegmento,
                         ),
-                        _buildDropdownField(
+                        _buildDropdownField<String>(
                           'Clase Presupuesto *',
-                          _clasePptos.map((c) => c.valor).toList(),
+                          _clasePptos.map((c) => DropdownMenuItem(value: c.valor, child: Text(c.valor, style: GoogleFonts.inter(fontSize: 14)))).toList(),
                           _selectedClasePpto,
                           (value) => setState(() => _selectedClasePpto = value),
                           initialValue: _selectedClasePpto,
                         ),
-                        _buildDropdownField(
+                        _buildDropdownField<String>(
                           'Canal *',
-                          _canales.map((c) => c.valor).toList(),
+                          _canales.map((c) => DropdownMenuItem(value: c.valor, child: Text(c.valor, style: GoogleFonts.inter(fontSize: 14)))).toList(),
                           _selectedCanal,
                           (value) => setState(() => _selectedCanal = value),
                           initialValue: _selectedCanal,
@@ -420,14 +440,16 @@ class _FormViewState extends State<FormView> {
                           'Responsable Actividad *',
                           _responsableActController,
                         ),
+
+
                       ],
                     ),
                     _buildFormRow(
                       context,
                       children: [
-                        _buildDropdownField(
+                        _buildDropdownField<String>(
                           'Ciudad *',
-                          _ciudades.map((c) => c.valor).toList(),
+                          _ciudades.map((c) => DropdownMenuItem(value: c.valor, child: Text(c.valor, style: GoogleFonts.inter(fontSize: 14)))).toList(),
                           _selectedCiudad,
                           (value) => setState(() => _selectedCiudad = value),
                           initialValue: _selectedCiudad,
@@ -670,8 +692,8 @@ class _FormViewState extends State<FormView> {
     );
   }
 
-  Widget _buildDropdownField(
-      String label, List<String> items, String? selectedValue, ValueChanged<String?> onChanged, {String? initialValue}) {
+  Widget _buildDropdownField<T>(
+      String label, List<DropdownMenuItem<T>> items, T? selectedValue, ValueChanged<T?> onChanged, {T? initialValue}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -684,23 +706,18 @@ class _FormViewState extends State<FormView> {
           ),
         ),
         const SizedBox(height: 4),
-        DropdownButtonFormField<String>(
+        DropdownButtonFormField<T>(
           initialValue: initialValue,
           decoration: InputDecoration(
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
             contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           ),
           hint: Text('Selecciona $label', style: GoogleFonts.inter(fontSize: 14)),
-          items: items
-              .map((item) => DropdownMenuItem(
-                    value: item,
-                    child: Text(item, style: GoogleFonts.inter(fontSize: 14)),
-                  ))
-              .toList(),
+          items: items,
           onChanged: onChanged,
           style: GoogleFonts.inter(fontSize: 14, color: AppColors.textDark),
           validator: (value) {
-            if (label.contains('*') && (value == null || value.isEmpty)) {
+            if (label.contains('*') && (value == null || (value is String && value.isEmpty))) {
               return 'Por favor selecciona un ${label.replaceAll('*', '').trim()}';
             }
             return null;

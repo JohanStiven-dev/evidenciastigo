@@ -14,6 +14,8 @@ async function clearDatabase() {
 
         for (const model of models) {
             if (model.name === 'SequelizeMeta') continue; // Skip migration table
+            if (model.name === 'Catalogo') continue; // Skip Catalogos as requested
+            if (model.name === 'User') continue; // Skip Users to preserve accounts
             console.log(`Truncating table: ${model.tableName}`);
             await model.destroy({ where: {}, truncate: true, force: true });
         }

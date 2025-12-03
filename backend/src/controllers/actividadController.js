@@ -94,6 +94,9 @@ const createActividad = async (req, res) => {
 
     // NOTE: Notification to client is now sent when moving to 'En Revisión'
 
+    // NOTE: Notification is now sent only when moving to 'En Revisión' (Status Change)
+    // notifyProducersNewActivity removed to comply with "only notify on status change" (Draft -> Review)
+
     successResponse(res, 'Activity created successfully', newActivity, 201);
   } catch (error) {
     await t.rollback();
@@ -101,7 +104,16 @@ const createActividad = async (req, res) => {
   }
 };
 
-const { notifyActivityCreated, notifyActivityConfirmed } = require('../services/notificationService');
+const {
+  notifyActivityCreated,
+  notifyActivityConfirmed,
+  notifyActivityAssigned,
+  notifyProducersNewActivity,
+  notifyActivityCorrectionRequired,
+  notifyEvidenceReadyForReview,
+  notifyActivityFinalized,
+  notifyEvidenceRejected
+} = require('../services/notificationService');
 const { Proyecto } = require('../models/init-associations');
 
 // ... (existing imports)
@@ -141,85 +153,30 @@ const changeActividadStatus = async (req, res) => {
 
     // 1. Comercial sends to validation
     if (oldSubStatus === SUB_STATUS.BORRADOR && newSubStatus === SUB_STATUS.EN_REVISION && user.rol === ROLES.COMERCIAL) {
-      const cliente = actividad.Proyecto?.Cliente;
-      if (cliente) {
-        postCommitActions.push(() => notifyActivityCreated(actividad, cliente));
-      } else {
-        console.warn(`Activity ${actividad.id} has no associated client for notification.`);
-      }
+      postCommitActions.push(() => notifyActivityCreated(actividad));
     }
 
     // 2. Cliente approves/rejects initial proposal
     else if (oldSubStatus === SUB_STATUS.EN_REVISION && user.rol === ROLES.CLIENTE) {
       if (newSubStatus === SUB_STATUS.PROGRAMADA) { // Approved
-        postCommitActions.push(() => notifyActivityConfirmed(actividad, actividad.Comercial, actividad.Productor));
+        postCommitActions.push(() => notifyActivityConfirmed(actividad));
       } else if (newSubStatus === SUB_STATUS.RECHAZADO) { // Rejected
-        // Existing logic for rejection notification to Comercial
-        const comercial = actividad.Comercial;
-        if (comercial) {
-          postCommitActions.push(() => addNotificationJob('sendEmail', {
-            to: comercial.email,
-            subject: `Corrección Requerida para Actividad: ${actividad.codigos}`,
-            templateName: 'activityCorrectionRequired',
-            context: { userName: comercial.nombre, activityCodigos: actividad.codigos, motivo: motivo, activityLink: `${BASE_URL_API}/actividades/${actividad.id}` }
-          }));
-        }
+        postCommitActions.push(() => notifyActivityCorrectionRequired(actividad, motivo));
       }
     }
 
     // 3. Productor sends for final approval
     else if (oldSubStatus === SUB_STATUS.CARGANDO_EVIDENCIAS && newSubStatus === SUB_STATUS.APROBACION_FINAL && user.rol === ROLES.PRODUCTOR) {
-      const comercial = actividad.Comercial;
-      if (comercial) {
-        postCommitActions.push(() => addNotificationJob('sendEmail', {
-          to: comercial.email,
-          subject: `Evidencias listas para revisión: ${actividad.codigos}`,
-          templateName: 'evidenceReadyForReview',
-          context: { userName: comercial.nombre, activityCodigos: actividad.codigos, activityLink: `${BASE_URL_API}/actividades/${actividad.id}` }
-        }));
-      }
+      postCommitActions.push(() => notifyEvidenceReadyForReview(actividad));
     }
 
     // 4. Cliente gives final approval/rejection
     else if (oldSubStatus === SUB_STATUS.APROBACION_FINAL && user.rol === ROLES.CLIENTE) {
       if (newSubStatus === SUB_STATUS.COMPLETADO) { // Approved / Finalized
-        const productor = actividad.Productor;
-        const comercial = actividad.Comercial;
-        if (productor) {
-          postCommitActions.push(() => addNotificationJob('sendEmail', {
-            to: productor.email,
-            subject: `Actividad Finalizada Exitosamente: ${actividad.codigos}`,
-            templateName: 'activityFinalized',
-            context: { userName: productor.nombre, activityCodigos: actividad.codigos, activityLink: `${BASE_URL_API}/actividades/${actividad.id}` }
-          }));
-        }
-        if (comercial) {
-          postCommitActions.push(() => addNotificationJob('sendEmail', {
-            to: comercial.email,
-            subject: `Actividad Finalizada Exitosamente: ${actividad.codigos}`,
-            templateName: 'activityFinalized',
-            context: { userName: comercial.nombre, activityCodigos: actividad.codigos, activityLink: `${BASE_URL_API}/actividades/${actividad.id}` }
-          }));
-        }
+        postCommitActions.push(() => notifyActivityFinalized(actividad));
+
       } else if (newSubStatus === SUB_STATUS.CARGANDO_EVIDENCIAS) { // Rejected
-        const productor = actividad.Productor;
-        const comercial = actividad.Comercial;
-        if (productor) {
-          postCommitActions.push(() => addNotificationJob('sendEmail', {
-            to: productor.email,
-            subject: `Revisión de Evidencias Requerida: ${actividad.codigos}`,
-            templateName: 'evidenceRejected',
-            context: { userName: productor.nombre, activityCodigos: actividad.codigos, motivo: motivo, activityLink: `${BASE_URL_API}/actividades/${actividad.id}` }
-          }));
-        }
-        if (comercial) {
-          postCommitActions.push(() => addNotificationJob('sendEmail', {
-            to: comercial.email,
-            subject: `Revisión de Evidencias Requerida: ${actividad.codigos}`,
-            templateName: 'evidenceRejected',
-            context: { userName: comercial.nombre, activityCodigos: actividad.codigos, motivo: motivo, activityLink: `${BASE_URL_API}/actividades/${actividad.id}` }
-          }));
-        }
+        postCommitActions.push(() => notifyEvidenceRejected(actividad, null, motivo));
       }
     }
 

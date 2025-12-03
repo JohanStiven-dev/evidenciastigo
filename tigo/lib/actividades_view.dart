@@ -376,8 +376,8 @@ class _ActividadesViewState extends State<ActividadesView> {
                       builder: (context, snapshot) {
                         if (snapshot.hasData && snapshot.data == 'Comercial') {
                           return ElevatedButton.icon(
-                            onPressed: () {
-                              showDialog(
+                            onPressed: () async {
+                              final result = await showDialog(
                                 context: context,
                                 builder: (BuildContext context) {
                                   return Dialog(
@@ -417,6 +417,14 @@ class _ActividadesViewState extends State<ActividadesView> {
                                   );
                                 },
                               );
+                              if (result == true) {
+                                _fetchActividades(
+                                  startDate: _selectedStartDate,
+                                  endDate: _selectedEndDate,
+                                  ciudad: _selectedCiudad,
+                                  canal: _selectedCanal,
+                                );
+                              }
                             },
                             icon: const Icon(Icons.add, size: 18),
                             label: Text('Nueva Actividad', style: GoogleFonts.inter(fontSize: 14)),

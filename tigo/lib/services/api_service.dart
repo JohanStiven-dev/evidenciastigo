@@ -14,7 +14,7 @@ import 'dart:typed_data';
 import 'package:http_parser/http_parser.dart' show MediaType;
 
 class ApiService {
-  static const String _baseUrl = 'http://localhost:3000/api/v2'; // TODO: Replace with your backend URL
+  static const String _baseUrl = String.fromEnvironment('API_URL', defaultValue: 'http://localhost:3000/api/v2');
 
   // Placeholder for authentication token
   String? _authToken;
@@ -147,6 +147,25 @@ class ApiService {
     } catch (e) {
       debugPrint('API Service - Login: Error: $e');
       throw ApiException('Error de red o del servidor: $e');
+    }
+  }
+
+  
+  Future<List<User>> getUsersByRole(String role) async {
+    final url = Uri.parse('$_baseUrl/users?rol=$role');
+    try {
+      final response = await http.get(url, headers: await _getHeaders());
+      if (response.statusCode == 200) {
+        final List<dynamic> data = json.decode(response.body)['data'];
+        return data.map((json) => User.fromJson(json)).toList();
+      } else {
+        final errorData = json.decode(response.body);
+        final errorMessage = errorData['message'] ?? 'Error al cargar usuarios.';
+        throw ApiException(errorMessage, statusCode: response.statusCode);
+      }
+    } catch (e) {
+      debugPrint('Error fetching users by role: $e');
+      throw ApiException('Error de red o del servidor al intentar cargar usuarios: $e');
     }
   }
 
