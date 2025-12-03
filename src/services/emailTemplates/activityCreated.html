@@ -1,0 +1,16 @@
+<div style="font-family: Arial, sans-serif; color: #333;">
+    <h2>Nueva Actividad Creada</h2>
+    <p>Hola {{userName}},</p>
+    <p>Se ha creado una nueva actividad que requiere tu revisión:</p>
+    <ul>
+        <li><strong>Código:</strong> {{activityCodigos}}</li>
+        <li><strong>Agencia:</strong> {{activityAgencia}}</li>
+        <li><strong>Ciudad:</strong> {{activityCiudad}}</li>
+        <li><strong>Fecha:</strong> {{activityFecha}}</li>
+    </ul>
+    <p>Por favor, ingresa a la plataforma para revisarla y aprobarla.</p>
+    <div style="text-align: center; margin: 30px 0;">
+        <a href="{{activityLink}}" style="background-color: #00377B; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; font-weight: bold;">Ver Actividad</a>
+    </div>
+    <p>Gracias,<br>El equipo de {{appName}}</p>
+</div>
