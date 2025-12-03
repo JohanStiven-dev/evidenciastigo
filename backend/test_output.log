@@ -1,0 +1,151 @@
+  console.log
+    Connected to Redis!
+
+      at EventEmitter.log (src/config/redis.js:7:11)
+
+[32minfo[39m: POST /api/v2/auth/login {"requestId":"f7f64569-e594-4e17-a2ed-b71cce179d20","timestamp":"2025-12-02T03:04:10.134Z"}
+[32minfo[39m: POST /api/v2/auth/login {"requestId":"b3d44699-2ef4-420c-b3c7-a87c2afaeb78","timestamp":"2025-12-02T03:04:12.217Z"}
+[32minfo[39m: POST /api/v2/auth/login {"requestId":"4903a377-795f-4048-9211-d1b506678815","timestamp":"2025-12-02T03:04:12.709Z"}
+[32minfo[39m: POST /api/v2/actividades {"requestId":"2f58a9c4-2854-4a79-8602-0d39df7024e2","timestamp":"2025-12-02T03:04:13.190Z"}
+[32minfo[39m: GET /api/v2/presupuestos/actividad/10 {"requestId":"2d9233f7-58bb-4823-8fc1-dbcaed99ed67","timestamp":"2025-12-02T03:04:14.357Z"}
+[32minfo[39m: POST /api/v2/presupuestos/8/items {"requestId":"648cb6f8-be97-44fe-acdf-b4abfb17c389","timestamp":"2025-12-02T03:04:14.698Z"}
+  console.log
+    --- DEBUG ADD BUDGET ITEM ---
+
+      at log (src/controllers/presupuestoController.js:171:13)
+
+  console.log
+    Activity ID: 10
+
+      at log (src/controllers/presupuestoController.js:172:13)
+
+  console.log
+    Activity Total Value: 100000.00
+
+      at log (src/controllers/presupuestoController.js:173:13)
+
+  console.log
+    Current Items Count: 0
+
+      at log (src/controllers/presupuestoController.js:174:13)
+
+  console.log
+    Current Total Used: 0
+
+      at log (src/controllers/presupuestoController.js:175:13)
+
+  console.log
+    New Item Subtotal: 10000
+
+      at log (src/controllers/presupuestoController.js:176:13)
+
+  console.log
+    New Calculated Total: 10000
+
+      at log (src/controllers/presupuestoController.js:177:13)
+
+  console.log
+    Is New Total > Activity Total? false
+
+      at log (src/controllers/presupuestoController.js:178:13)
+
+  console.log
+    -----------------------------
+
+      at log (src/controllers/presupuestoController.js:179:13)
+
+[32minfo[39m: POST /api/v2/evidencias {"requestId":"113e098d-42a4-49ad-a373-aeb52e89bf98","timestamp":"2025-12-02T03:04:15.338Z"}
+  console.log
+    File validation: {
+      originalname: 'test_image.jpg',
+      mimetype: 'image/jpeg',
+      extname: true,
+      mimetypeValid: true
+    }
+
+      at log (src/middleware/uploadMiddleware.js:37:11)
+
+  console.log
+    --- CREATE EVIDENCIA START ---
+
+      at log (src/controllers/evidenciaController.js:120:11)
+
+  console.log
+    Body: [Object: null prototype] { presupuesto_item_id: '8', tipo: 'image' }
+
+      at log (src/controllers/evidenciaController.js:121:11)
+
+  console.log
+    File: {
+      fieldname: 'evidencia',
+      originalname: 'test_image.jpg',
+      encoding: '7bit',
+      mimetype: 'image/jpeg',
+      destination: '/Users/johanstiven/Desktop/Desarrollos/administrativotigo/backend/temp_uploads',
+      filename: 'evidencia-1764644655445.jpg',
+      path: '/Users/johanstiven/Desktop/Desarrollos/administrativotigo/backend/temp_uploads/evidencia-1764644655445.jpg',
+      size: 18
+    }
+
+      at log (src/controllers/evidenciaController.js:122:11)
+
+  console.log
+    Saving file...
+
+      at log (src/controllers/evidenciaController.js:165:13)
+
+  console.log
+    File saved: {
+      archivo_path: '/uploads/actividades/10/evidencias/2025-12/evidencia-1764644655445.jpg-1764644655674.jpg',
+      archivo_nombre: 'evidencia-1764644655445.jpg-1764644655674.jpg',
+      mime: 'image/jpeg',
+      peso_bytes: 18,
+      tipo: 'image'
+    }
+
+      at log (src/controllers/evidenciaController.js:167:13)
+
+  console.log
+    Evidencia created: 12
+
+      at log (src/controllers/evidenciaController.js:179:13)
+
+  console.log
+    --- CREATE EVIDENCIA SUCCESS ---
+
+      at log (src/controllers/evidenciaController.js:196:13)
+
+[32minfo[39m: PUT /api/v2/evidencias/12/status {"requestId":"22d6de50-ae07-4191-ad0d-18deac7a6f61","timestamp":"2025-12-02T03:04:16.193Z"}
+[33mwarn[39m: Unknown job type: undefined {"timestamp":"2025-12-02T03:04:17.665Z"}
+[32minfo[39m: Job 23 of type sendEmail completed successfully {"timestamp":"2025-12-02T03:04:17.667Z"}
+[32minfo[39m: GET /api/v2/actividades/10 {"requestId":"a611ee2b-9e13-4e29-a4b9-33cfe540bc5f","timestamp":"2025-12-02T03:04:17.668Z"}
+FAIL tests/workflow.test.js (8.04 s)
+  Core Workflow Integration Test
+    ✓ Step 1: Comercial creates an Activity (2146 ms)
+    ✓ Step 2: Productor uploads Evidence (856 ms)
+    ✓ Step 3: Cliente approves Evidence (1475 ms)
+    ✕ Step 4: Verify Activity Finalization (106 ms)
+
+  ● Core Workflow Integration Test › Step 4: Verify Activity Finalization
+
+    expect(received).toEqual(expected) // deep equality
+
+    Expected: 200
+    Received: 500
+
+      142 |             .set('Authorization', `Bearer ${comercialToken}`);
+      143 |
+    > 144 |         expect(res.statusCode).toEqual(200);
+          |                                ^
+      145 |         expect(res.body.data.estado).toEqual('Finalizada');
+      146 |         expect(res.body.data.sub_estado).toEqual('Completado');
+      147 |     });
+
+      at Object.toEqual (tests/workflow.test.js:144:32)
+
+Test Suites: 1 failed, 1 total
+Tests:       1 failed, 3 passed, 4 total
+Snapshots:   0 total
+Time:        8.058 s, estimated 9 s
+Ran all test suites matching tests/workflow.test.js.
+Force exiting Jest: Have you considered using `--detectOpenHandles` to detect async operations that kept running after all tests finished?

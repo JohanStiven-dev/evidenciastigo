@@ -1,0 +1,16 @@
+<div style="font-family: Arial, sans-serif; color: #333;">
+    <h2>Corrección Requerida</h2>
+    <p>Hola {{userName}},</p>
+    <p>La actividad <strong>{{activityCodigos}}</strong> ha sido revisada por el cliente y requiere correcciones.</p>
+    <p><strong>Motivo del rechazo:</strong></p>
+    <blockquote style="background-color: #f9f9f9; border-left: 4px solid #ccc; padding: 10px; margin: 10px 0;">
+        {{motivo}}
+    </blockquote>
+    <p>Por favor, realiza los ajustes necesarios y vuelve a enviarla a revisión.</p>
+    <div style="text-align: center; margin: 30px 0;">
+        <a href="{{activityLink}}"
+            style="background-color: #00377B; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; font-weight: bold;">Ver
+            Actividad</a>
+    </div>
+    <p>Gracias,<br>El equipo de {{appName}}</p>
+</div>
